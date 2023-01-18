@@ -1,4 +1,5 @@
 export enum EmailTokenType {
   Verification = 'VERIFICATION',
-  Recovery = 'RECOVERY',
+  ChangeEmail = 'CHANGE_EMAIL',
+  PasswordRecovery = 'PASSWORD_RECOVERY',
 }

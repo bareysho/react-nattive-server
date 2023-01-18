@@ -6,9 +6,12 @@ import '@config/passport';
 import { IS_DEVELOPMENT } from '@constants/common';
 import { EmailTokenType } from '@enums/emailToken';
 import { UserRole } from '@enums/userRole';
+import { EmailToken } from '@models/emailToken';
 import { RefreshToken } from '@models/refreshToken';
 import { User } from '@models/user';
+import { UserCredentials } from '@models/userCredentials';
 import { AccessTokenService } from '@service/accessToken.service';
+import { EmailNotificationService } from '@service/emailNotification.service';
 import { EmailTokenService } from '@service/emailToken.service';
 import { EmailTokenRepository } from '@service/repository/emailToken.repository';
 import { RefreshTokenRepository } from '@service/repository/refreshToken.repository';
@@ -36,14 +39,6 @@ export class AuthController {
   public static registerUser = async (req: Request, res: Response): Promise<void> => {
     console.log('Request register user', req.body);
 
-    const dbName = process.env.DB_NAME as string;
-    const dbUser = process.env.DB_USER as string;
-    const dbHost = process.env.DB_HOST;
-    const dbPassword = process.env.DB_PASSWORD;
-
-    console.log({ dbName, dbUser, dbHost, dbPassword });
-    console.log({ dbName, dbUser, dbHost, dbPassword });
-
     try {
       const user = await UserService.createUser({
         email: req.body.email,
@@ -52,13 +47,20 @@ export class AuthController {
         password: req.body.password,
       });
 
-      await EmailTokenRepository.createEmailToken(user.id, EmailTokenType.Verification);
+      await EmailToken.destroy({
+        where: {
+          userId: user.id,
+          type: EmailTokenType.Verification,
+        },
+      });
+      const emailToken = await EmailTokenRepository.createEmailToken(user.id, EmailTokenType.Verification);
+      await EmailNotificationService.sendEmail(emailToken.token, user.email);
 
       res.sendStatus(200);
     } catch (error) {
-      console.log('ERROR', { message: error.toString() });
+      console.log(`Registration ${req.body.username} error`, { message: error.toString() });
 
-      res.status(403).json({ message: error.toString() });
+      res.status(403).json({ message: error });
     }
   };
 
@@ -80,7 +82,7 @@ export class AuthController {
       const refreshToken = await AccessTokenService.generateRefreshToken(user.id, req.ip);
       const accessToken = AccessTokenService.generateAccessToken(user.username);
 
-      console.log('Response: ', { ...user, token: accessToken, refreshToken: refreshToken.token });
+      console.log('Response: ', { id: user.id, token: accessToken, refreshToken: refreshToken.token });
 
       res.json({ id: user.id, token: accessToken, refreshToken: refreshToken.token });
     } catch (error) {
@@ -145,6 +147,30 @@ export class AuthController {
       res.status(200).json({ id: refreshToken.userId, token: accessToken, refreshToken: refreshToken.token });
     } catch (error) {
       res.status(400).json({ error: error.toString() });
+    }
+  };
+
+  public static recoveryPassword = async (req: Request, res: Response) => {
+    console.log('Password recovery: ', req.body);
+
+    const { otp, email, password } = req.body;
+
+    try {
+      const user = await UserRepository.findByEmail(email);
+
+      await EmailTokenService.validateEmailToken(user.id, otp, EmailTokenType.PasswordRecovery);
+
+      await UserCredentials.destroy({ where: { userId: user.id } });
+      await UserCredentials.create({
+        userId: user.id,
+        password,
+      });
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.log('Password recovery failed:', { message: error.toString() });
+
+      res.status(500).json({ message: error.toString() });
     }
   };
 }

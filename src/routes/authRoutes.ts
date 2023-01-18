@@ -14,7 +14,8 @@ export class AuthRoutes {
     this.router.post('/authenticate', AuthController.authenticateUser);
     this.router.post('/refresh-token', AuthController.refreshToken);
     this.router.post('/registration', AuthController.registerUser);
-    this.router.patch('/verify-registration', AuthController.verifyRegistration);
     this.router.post('/revoke-token', AuthService.authenticateJWT(AuthController.revokeToken));
+    this.router.patch('/recovery-password', AuthController.recoveryPassword);
+    this.router.patch('/verify-registration', AuthController.verifyRegistration);
   }
 }

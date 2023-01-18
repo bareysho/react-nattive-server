@@ -10,6 +10,7 @@ dotenv.config();
 import dbInitialize from '@config/database/initialization';
 
 import { AuthRoutes } from '@routes/authRoutes';
+import { EmailTokenRoutes } from '@routes/emailTokenRoutes';
 import { UserRoutes } from '@routes/userRoutes';
 
 class Server {
@@ -31,6 +32,7 @@ class Server {
   public routes = (): void => {
     this.app.use('/auth', new AuthRoutes().router);
     this.app.use('/api/user', new UserRoutes().router);
+    this.app.use('/email-code', new EmailTokenRoutes().router);
   };
 
   public config = (): void => {
