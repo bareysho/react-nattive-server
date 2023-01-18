@@ -1,4 +1,3 @@
-import { IS_DEVELOPMENT } from '@constants/common';
 import { EmailToken } from '@models/emailToken';
 import { RefreshToken } from '@models/refreshToken';
 import { User } from '@models/user';
@@ -9,7 +8,7 @@ const synchronize = async (): Promise<void> => {
   try {
     await dbConnection
       // Change alter: true in case DB update is required, run locally and return false again
-      .sync({ force: false, alter: IS_DEVELOPMENT })
+      .sync({ force: true, alter: true })
       .then(() => console.log('DB Connection established successfully.'))
       .catch((error) => console.error(`DB Sequelize Connection Failed: ${error}`));
   } catch (error) {

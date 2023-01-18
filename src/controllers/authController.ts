@@ -36,6 +36,14 @@ export class AuthController {
   public static registerUser = async (req: Request, res: Response): Promise<void> => {
     console.log('Request register user', req.body);
 
+    const dbName = process.env.DB_NAME as string;
+    const dbUser = process.env.DB_USER as string;
+    const dbHost = process.env.DB_HOST;
+    const dbPassword = process.env.DB_PASSWORD;
+
+    console.log({ dbName, dbUser, dbHost, dbPassword });
+    console.log({ dbName, dbUser, dbHost, dbPassword });
+
     try {
       const user = await UserService.createUser({
         email: req.body.email,
@@ -48,6 +56,8 @@ export class AuthController {
 
       res.sendStatus(200);
     } catch (error) {
+      console.log('ERROR', { message: error.toString() });
+
       res.status(403).json({ message: error.toString() });
     }
   };
