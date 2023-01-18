@@ -45,16 +45,12 @@ passport.use(
       secretOrKey: JWT_SECRET,
     },
     async (jwtToken, done) => {
-      try {
-        const user = await UserRepository.findByUsername(jwtToken.username);
+      const user = await UserRepository.findByUsername(jwtToken.username);
 
-        if (user) {
-          return done(undefined, user, jwtToken);
-        } else {
-          return done(undefined, false);
-        }
-      } catch (error) {
-        return done(error, false);
+      if (user) {
+        return done(undefined, user);
+      } else {
+        return done(undefined, false);
       }
     },
   ),

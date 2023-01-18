@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import passport from 'passport';
 
 import '@config/passport';
+import { IS_DEVELOPMENT } from '@constants/common';
 import { EmailTokenType } from '@enums/emailToken';
 import { UserRole } from '@enums/userRole';
 import { RefreshToken } from '@models/refreshToken';
@@ -10,6 +11,7 @@ import { User } from '@models/user';
 import { AccessTokenService } from '@service/accessToken.service';
 import { EmailTokenService } from '@service/emailToken.service';
 import { EmailTokenRepository } from '@service/repository/emailToken.repository';
+import { RefreshTokenRepository } from '@service/repository/refreshToken.repository';
 import { UserRepository } from '@service/repository/user.repository';
 import { UserService } from '@service/user.service';
 
@@ -44,24 +46,26 @@ export class AuthController {
 
       await EmailTokenRepository.createEmailToken(user.id, EmailTokenType.Verification);
 
-      res.status(200).json({ user });
+      res.sendStatus(200);
     } catch (error) {
-      console.log({ error });
-
-      res.status(403).json({ message: error });
+      res.status(403).json({ message: error.toString() });
     }
   };
 
   public static verifyRegistration = async (req: Request, res: Response) => {
-    console.log('Request verifyEmail: ', req.body);
+    console.log('Registration verification: ', req.body);
 
     try {
       const { otp, email } = req.body;
 
       const user = await UserRepository.findByEmail(email);
 
-      await EmailTokenService.validateEmailToken(user.id, otp, EmailTokenType.Verification);
-      await UserService.updateUserById(user.id, { verified: true });
+      if (otp === '000000' && IS_DEVELOPMENT) {
+        console.log('Skip otp verification on DEV');
+      } else {
+        await EmailTokenService.validateEmailToken(user.id, otp, EmailTokenType.Verification);
+        await UserService.updateUserById(user.id, { verified: true });
+      }
 
       const refreshToken = await AccessTokenService.generateRefreshToken(user.id, req.ip);
       const accessToken = AccessTokenService.generateAccessToken(user.username);
@@ -70,9 +74,9 @@ export class AuthController {
 
       res.json({ id: user.id, token: accessToken, refreshToken: refreshToken.token });
     } catch (error) {
-      console.log({ error });
+      console.log('Registration verification failed:', { error });
 
-      res.send(500).json(error);
+      res.status(500).json({ message: error.toString() });
     }
   };
 
@@ -98,6 +102,39 @@ export class AuthController {
       },
     );
 
-    return res.sendStatus(200);
+    return res.status(200).json({ message: ErrorMessage.TokenRevoked });
+  };
+
+  public static refreshToken = async (req: Request, res: Response) => {
+    console.log('Access token expired, try refresh');
+
+    try {
+      const token = req.body.refreshToken;
+      const ipAddress = req.ip;
+
+      const requestRefreshToken = await RefreshTokenRepository.getRefreshTokenByToken(token);
+
+      if (!requestRefreshToken || requestRefreshToken.isExpired || requestRefreshToken.revoked) {
+        return res.status(400).json({ message: ErrorMessage.InvalidRefreshToken });
+      }
+
+      const refreshToken = await RefreshTokenRepository.createRefreshToken(requestRefreshToken.userId, ipAddress);
+
+      await requestRefreshToken.update({
+        revoked: new Date(),
+        replacedByToken: refreshToken.token,
+        revokedByIp: ipAddress,
+      });
+
+      const user = await UserRepository.findById(requestRefreshToken.userId);
+
+      const accessToken = AccessTokenService.generateAccessToken(user.username);
+
+      console.log('Refresh success:', { id: refreshToken.userId, token: accessToken, refreshToken: refreshToken.token });
+
+      res.status(200).json({ id: refreshToken.userId, token: accessToken, refreshToken: refreshToken.token });
+    } catch (error) {
+      res.status(400).json({ error: error.toString() });
+    }
   };
 }

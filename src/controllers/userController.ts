@@ -12,9 +12,9 @@ export class UserController {
 
       const user = await UserRepository.findById(params.id);
 
-      res.json(user);
+      res.json(user.toJSON());
     } catch (error) {
-      console.log({ error });
+      console.log('Request user by ID failed:', { error });
 
       res.send(500).json(error);
     }

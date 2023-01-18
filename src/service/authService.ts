@@ -19,8 +19,6 @@ export class AuthService {
           res.status(401).json({ message: ErrorMessage.TokenExpired });
         } else {
           await callback(req, res, next)(err, user);
-
-          next();
         }
       })(req, res, next);
 }
