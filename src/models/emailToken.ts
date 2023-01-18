@@ -53,7 +53,7 @@ EmailToken.init(
       allowNull: false,
       validate: {
         customValidator: (value) => {
-          const types = [EmailTokenType.Verification, EmailTokenType.Recovery];
+          const types = [EmailTokenType.Verification, EmailTokenType.PasswordRecovery, EmailTokenType.ChangeEmail];
 
           if (!types.includes(value)) {
             throw new Error('Not a valid option');
