@@ -5,7 +5,7 @@ import passport from 'passport';
 
 export class AuthService {
   public static authenticateJWT =
-    (callback: (req: Request, res: Response, next: NextFunction) => (err: Error, user: User) => void) =>
+    (callback: (req: Request, res: Response, next: NextFunction) => (err: string, user: User) => void) =>
     (req: Request, res: Response, next: NextFunction) =>
       passport.authenticate('jwt', async (err, user) => {
         if (err) {
@@ -16,8 +16,6 @@ export class AuthService {
           res.status(401).json({ message: ErrorMessage.TokenExpired });
         } else {
           await callback(req, res, next)(err, user);
-
-          next();
         }
       })(req, res, next);
 }

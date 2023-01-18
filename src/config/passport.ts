@@ -28,7 +28,7 @@ passport.use(
           return done(undefined, user);
         }
 
-        return done(undefined, false, { message: ErrorMessage.InvalidCredentials });
+        return done({ message: ErrorMessage.InvalidCredentials }, false);
       } catch (error) {
         return done(error);
       }
@@ -45,16 +45,12 @@ passport.use(
       secretOrKey: JWT_SECRET,
     },
     async (jwtToken, done) => {
-      try {
-        const user = await UserRepository.findByUsername(jwtToken.username);
+      const user = await UserRepository.findByUsername(jwtToken.username);
 
-        if (user) {
-          return done(undefined, user, jwtToken);
-        } else {
-          return done(undefined, false);
-        }
-      } catch (error) {
-        return done(error, false);
+      if (user) {
+        return done(undefined, user);
+      } else {
+        return done(undefined, false);
       }
     },
   ),
