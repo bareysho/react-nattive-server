@@ -21,7 +21,8 @@
     "lint": "eslint --ext ts,tsx src",
     "lint:fix": "eslint --fix --ext ts,js src",
     "prettier": "prettier 'src/**/*.{ts,js,json}'",
-    "prettier:fix": "npm run prettier -- --write"
+    "prettier:fix": "npm run prettier -- --write",
+    "heroku-prebuild": "yarn build-ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
