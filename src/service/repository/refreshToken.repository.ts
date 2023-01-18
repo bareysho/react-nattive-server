@@ -3,6 +3,8 @@ import { Random } from '@util/random';
 import { Op } from 'sequelize';
 
 export class RefreshTokenRepository {
+  public static getRefreshTokenByToken = (token: string) => RefreshToken.findOne({ where: { token } });
+
   public static getUserActiveRefreshTokensByIp = (userId: string, ip: string): Promise<RefreshToken[]> =>
     RefreshToken.findAll({
       where: {

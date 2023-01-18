@@ -1,16 +1,15 @@
+import { IS_DEVELOPMENT } from '@constants/common';
 import { EmailToken } from '@models/emailToken';
 import { RefreshToken } from '@models/refreshToken';
 import { User } from '@models/user';
 import { UserCredentials } from '@models/userCredentials';
 import dbConnection from './connection';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 const synchronize = async (): Promise<void> => {
   try {
     await dbConnection
       // Change alter: true in case DB update is required, run locally and return false again
-      .sync({ force: false, alter: isDevelopment })
+      .sync({ force: false, alter: IS_DEVELOPMENT })
       .then(() => console.log('DB Connection established successfully.'))
       .catch((error) => console.error(`DB Sequelize Connection Failed: ${error}`));
   } catch (error) {

@@ -1,12 +1,12 @@
 import { UserController } from '@controllers/userController';
 import { AuthService } from '@service/authService';
-import { Router } from 'express';
+import { Router, Router as routerCreator } from 'express';
 
 export class UserRoutes {
   router: Router;
 
   constructor() {
-    this.router = Router();
+    this.router = routerCreator();
     this.routes();
   }
   routes() {
