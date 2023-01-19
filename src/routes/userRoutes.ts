@@ -12,5 +12,8 @@ export class UserRoutes {
   routes() {
     // For TEST only ! In production, you should use an Identity Provider !!
     this.router.get('/:id', AuthService.authenticateJWT(UserController.getUserById));
+    this.router.patch('/change-password', AuthService.authenticateJWT(UserController.changePassword));
+    this.router.patch('/change-email', AuthService.authenticateJWT(UserController.verifyChangeEmail));
+    this.router.post('/request-change-email-code', AuthService.authenticateJWT(UserController.requestChangeEmailCode));
   }
 }

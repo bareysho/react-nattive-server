@@ -47,12 +47,6 @@ export class AuthController {
         password: req.body.password,
       });
 
-      await EmailToken.destroy({
-        where: {
-          userId: user.id,
-          type: EmailTokenType.Verification,
-        },
-      });
       const emailToken = await EmailTokenRepository.createEmailToken(user.id, EmailTokenType.Verification);
       await EmailNotificationService.sendEmail(emailToken.token, user.email);
 
@@ -76,6 +70,13 @@ export class AuthController {
         console.log('Skip otp verification on DEV');
       } else {
         await EmailTokenService.validateEmailToken(user.id, otp, EmailTokenType.Verification);
+        await EmailToken.destroy({
+          where: {
+            userId: user.id,
+            token: otp,
+            type: EmailTokenType.Verification,
+          },
+        });
         await UserService.updateUserById(user.id, { verified: true });
       }
 
@@ -114,7 +115,7 @@ export class AuthController {
       },
     );
 
-    return res.status(200).json({ message: ErrorMessage.TokenRevoked });
+    return res.sendStatus(200);
   };
 
   public static refreshToken = async (req: Request, res: Response) => {
@@ -159,6 +160,13 @@ export class AuthController {
       const user = await UserRepository.findByEmail(email);
 
       await EmailTokenService.validateEmailToken(user.id, otp, EmailTokenType.PasswordRecovery);
+      await EmailToken.destroy({
+        where: {
+          userId: user.id,
+          token: otp,
+          type: EmailTokenType.PasswordRecovery,
+        },
+      });
 
       await UserCredentials.destroy({ where: { userId: user.id } });
       await UserCredentials.create({
