@@ -1,3 +1,4 @@
+import { ErrorMessage } from '@enums/errorMessage';
 import { EmailToken } from '@models/emailToken';
 import { EmailNotificationService } from '@service/emailNotification.service';
 import { EmailTokenService } from '@service/emailToken.service';
@@ -13,6 +14,10 @@ export class EmailTokenController {
 
     try {
       const user = await UserRepository.findByEmail(email);
+
+      if (!user) {
+        throw ErrorMessage.UserNotFound;
+      }
 
       await EmailTokenService.validateEmailToken(user.id, otp, type);
 
@@ -32,6 +37,10 @@ export class EmailTokenController {
     try {
       const user = await UserRepository.findByEmail(email);
 
+      if (!user) {
+        throw ErrorMessage.UserNotFound;
+      }
+
       await EmailToken.destroy({
         where: {
           userId: user.id,
@@ -46,7 +55,7 @@ export class EmailTokenController {
     } catch (error) {
       console.log('Request email code failed:', error.toString());
 
-      res.status(500).json({ error: error.toString() });
+      res.status(500).json({ message: error });
     }
   };
 }
