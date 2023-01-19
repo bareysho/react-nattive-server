@@ -146,7 +146,7 @@ export class AuthController {
 
       res.status(200).json({ id: refreshToken.userId, token: accessToken, refreshToken: refreshToken.token });
     } catch (error) {
-      res.status(400).json({ error: error.toString() });
+      res.status(400).json({ message: error.toString() });
     }
   };
 

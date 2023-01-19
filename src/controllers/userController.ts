@@ -16,7 +16,7 @@ export class UserController {
     } catch (error) {
       console.log('Request user by ID failed:', { error });
 
-      res.send(500).json(error);
+      res.send(500).json({ message: error.toString() });
     }
   };
 }
