@@ -41,8 +41,8 @@ export class AuthController {
 
     try {
       const user = await UserService.createUser({
-        email: req.body.email,
-        username: req.body.username,
+        email: req.body.email.toLowerCase(),
+        username: req.body.username.toLowerCase(),
         role: UserRole.User,
         password: req.body.password,
       });
